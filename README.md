@@ -35,8 +35,8 @@ recognize/
 Файл: `annotations/[элемент].txt`
 
 Каждая строка — путь к изображению и координаты нужного элемента:
-  positive_images/diez/001.jpg 34 15 12 12
-  positive_images/diez/002.jpg 20 18 14 14
+positive_images/diez/001.jpg 34 15 12 12
+positive_images/diez/002.jpg 20 18 14 14
 
 
 Формат:
