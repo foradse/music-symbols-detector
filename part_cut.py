@@ -91,7 +91,7 @@ def save_parts_and_annotations(image, contours, base_name, output_dir, prefix, a
         x, y, w, h = cv2.boundingRect(cnt)
         cls = classify_fragment(w, h)
 
-        # Новая структура папок
+
         subfolder = 'positive' if cls != 'unknown' else 'unknown'
         part_dir = os.path.join(output_dir, subfolder, cls)
         os.makedirs(part_dir, exist_ok=True)
@@ -101,7 +101,7 @@ def save_parts_and_annotations(image, contours, base_name, output_dir, prefix, a
         part = image[y:y+h, x:x+w]
         cv2.imwrite(out_path, part)
 
-        # Рисуем прямоугольник и подпись
+
         color = (0, 255, 0) if cls != 'unknown' else (0, 0, 255)
         cv2.rectangle(annotated_image, (x, y), (x+w, y+h), color, 2)
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -117,7 +117,7 @@ def save_parts_and_annotations(image, contours, base_name, output_dir, prefix, a
         ann_file.write(f"{cls}/{part_name} {x} {y} {w} {h}\n")
         count += 1
 
-    # Сохраняем debug-изображение
+
     debug_dir = os.path.join(output_dir, "debug")
     os.makedirs(debug_dir, exist_ok=True)
     annotated_path = os.path.join(debug_dir, f"{base_name}_annotated.png")
