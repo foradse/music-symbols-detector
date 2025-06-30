@@ -1,2 +1,2 @@
-flat/myprefix_2_part_1.png 0 1 29 51
-flat/myprefix_7_part_1.png 9 4 19 51
+flat/myprefix_diez_01_part_1.png 0 1 29 51
+flat/myprefix_diez_02_part_1.png 9 4 19 51
