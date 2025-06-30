@@ -1,3 +1,2 @@
-diez/myprefix_diez_01_part_1.png 0 1 29 51
-flat/myprefix_diez_02_part_1.png 9 4 19 51
-diez/myprefix_foni-papik-pro-opha-p-kartinki-diez-na-prozrachnom-fone-12_part_1.png 134 38 552 742
+clef_g/myprefix_clef_part_1.png 0 15 47 87
+clef_g/myprefix_clef2_part_1.png 0 4 31 62

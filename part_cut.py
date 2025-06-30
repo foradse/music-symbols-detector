@@ -13,7 +13,7 @@ SYMBOL_CLASSES = {
     'note_head': lambda w, h: 0.7 < w/h < 1.3 and 15 < w < 40 and 15 < h < 40,  # Кружок ноты (почти круглый, средний размер)
     'pause_quarter': lambda w, h: h > w and 10 < w < 30 and 30 < h < 70,  # Пауза четвертная (вытянутая по вертикали)
     'pause_whole_half': lambda w, h: w > h and 30 < w < 70 and 10 < h < 30,  # Пауза целая/половинная (почти прямоугольник, горизонтальный)
-    'clef_g': lambda w, h: h > 2*w and 20 < w < 50 and 60 < h < 150,  # Скрипичный ключ (высокий, узкий)
+    'clef_g': lambda w, h: h > 1.8 * w and 10 < w < 60 and 60 < h < 160,  # Скрипичный ключ (высокий, узкий, мягче фильтр)
     'clef_f': lambda w, h: 0.7 < w/h < 1.3 and 30 < w < 70 and 30 < h < 70,  # Басовый ключ (почти круглый, крупный)
     'tail_eighth': lambda w, h: h > 2*w and 5 < w < 20 and 30 < h < 80,  # Хвостик восьмой ноты (узкий, высокий)
     'tail_sixteenth': lambda w, h: h > 2*w and 5 < w < 20 and 50 < h < 120,  # Хвостик шестнадцатой ноты (ещё выше)
