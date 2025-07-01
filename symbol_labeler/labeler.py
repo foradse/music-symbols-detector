@@ -2,22 +2,31 @@ import os
 import tkinter as tk
 from PIL import Image, ImageTk
 import shutil
+import time
 
 # Пути по умолчанию (корень проекта)
 INPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'input'))
 OUTPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output'))
 SYMBOLS_PATH = os.path.join(os.path.dirname(__file__), 'symbols.txt')
+CLASS_MAP_PATH = os.path.join(os.path.dirname(__file__), 'class_map.txt')
 ANNOTATION_FILE = os.path.join(OUTPUT_DIR, 'labels.txt')
 
-# Загрузка классов из symbols.txt
-if os.path.exists(SYMBOLS_PATH):
-    with open(SYMBOLS_PATH, 'r', encoding='utf-8') as f:
-        SYMBOL_CLASSES = [line.strip() for line in f if line.strip()]
-else:
-    SYMBOL_CLASSES = []
+# Загрузка русских названий классов
+with open(SYMBOLS_PATH, 'r', encoding='utf-8') as f:
+    SYMBOL_CLASSES = [line.strip() for line in f if line.strip()]
+
+# Загружаем соответствие русских и английских названий
+CLASS_MAP = {}
+with open(CLASS_MAP_PATH, 'r', encoding='utf-8') as f:
+    for line in f:
+        if ':' in line:
+            ru, en = line.strip().split(':', 1)
+            CLASS_MAP[ru.strip()] = en.strip()
 
 os.makedirs(INPUT_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+CLASSES_PER_PAGE = 10
 
 class LabelTool:
     def __init__(self, root):
@@ -31,34 +40,41 @@ class LabelTool:
         ])
         self.index = 0
         self.total = len(self.image_files)
+        self.history = []
 
-        # --- Минималистичный серый стиль ---
-        self.bg = '#232323'  # фон
-        self.fg = '#cccccc'  # основной текст
-        self.list_fg = '#bbbbbb'  # список классов
-        self.btn_bg = '#2d2d2d'  # кнопки
+        self.bg = '#232323'
+        self.fg = '#cccccc'
+        self.btn_bg = '#2d2d2d'
         self.btn_fg = '#e0e0e0'
         self.btn_active = '#444444'
         self.frame_bg = '#232323'
 
+        self.num_buffer = ''
+        self.last_num_time = 0
+        self.num_timeout = 1.0  # секунды для ввода многозначного номера
+
         self.root.configure(bg=self.bg)
 
-        # --- Слева: вертикальный список классов ---
+        # --- Слева: Listbox с классами ---
         self.left_frame = tk.Frame(root, bg=self.frame_bg)
         self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=18, pady=18)
-
-        class_list = '\n'.join([f"{i+1}. {cls}" for i, cls in enumerate(SYMBOL_CLASSES)] + ["0/n. негатив"])
-        self.class_label = tk.Label(self.left_frame, text=class_list, justify=tk.LEFT, anchor='nw',
-                                    fg=self.list_fg, bg=self.frame_bg, font=("Consolas", 15))
-        self.class_label.pack(anchor='nw', pady=10)
+        self.class_listbox = tk.Listbox(self.left_frame, width=24, height=18, font=("Consolas", 15),
+                                        bg=self.frame_bg, fg=self.fg, selectbackground='#444', activestyle='none')
+        for cls in SYMBOL_CLASSES:
+            self.class_listbox.insert(tk.END, cls)
+        self.class_listbox.pack(side=tk.LEFT, fill=tk.Y, expand=True)
+        self.class_listbox.select_set(0)
+        self.class_listbox.activate(0)
+        self.class_listbox.focus_set()
+        self.scrollbar = tk.Scrollbar(self.left_frame, orient="vertical", command=self.class_listbox.yview)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.class_listbox.config(yscrollcommand=self.scrollbar.set)
 
         # --- Справа: изображение и инфо ---
         self.right_frame = tk.Frame(root, bg=self.bg)
         self.right_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=18, pady=18)
-
         self.img_label = tk.Label(self.right_frame, bg=self.bg)
         self.img_label.pack(pady=20)
-
         self.info = tk.Label(self.right_frame, text="", fg=self.fg, bg=self.bg, font=("Consolas", 13))
         self.info.pack(pady=5)
 
@@ -81,10 +97,12 @@ class LabelTool:
                                   font=("Consolas", 12), command=self.root.quit)
         self.btn_quit.pack(side=tk.LEFT, padx=8)
 
-        # --- Горячие клавиши ---
-        self.root.bind("<Key>", self.key_handler)
+        self.root.bind('<Key>', self.key_handler)
+        self.class_listbox.bind('<Return>', self.on_enter)
+        self.class_listbox.bind('<Double-Button-1>', self.on_enter)
+        self.class_listbox.bind('<Up>', self.on_arrow)
+        self.class_listbox.bind('<Down>', self.on_arrow)
 
-        self.history = []  # для отмены
         self.load_image()
 
     def load_image(self):
@@ -94,7 +112,6 @@ class LabelTool:
             return
         img_path = os.path.join(self.image_dir, self.image_files[self.index])
         img = Image.open(img_path)
-        # Увеличиваем изображение ×3 (но не более 600x600)
         scale = 3
         new_w = min(img.width * scale, 600)
         new_h = min(img.height * scale, 600)
@@ -104,23 +121,19 @@ class LabelTool:
         self.img_label.image = self.tkimg
         self.info.config(text=f"[{self.index+1}/{self.total}] {self.image_files[self.index]}")
 
-    def assign_label(self, class_label):
+    def assign_label(self, class_label_ru):
         if self.index >= len(self.image_files):
             return
         fname = self.image_files[self.index]
-        # Сохраняем аннотацию
+        class_label_en = CLASS_MAP.get(class_label_ru, class_label_ru)
         with open(self.annotation_path, 'a', encoding='utf-8') as f:
-            f.write(f"{fname},{class_label}\n")
-        # Перемещаем файл в output/positive/class_label или output/negative
-        if class_label == 'negative':
-            target_dir = os.path.join(self.output_dir, 'negative')
-        else:
-            target_dir = os.path.join(self.output_dir, 'positive', class_label)
+            f.write(f"{fname},{class_label_en}\n")
+        target_dir = os.path.join(self.output_dir, 'positive', class_label_en)
         os.makedirs(target_dir, exist_ok=True)
         src = os.path.join(self.image_dir, fname)
         dst = os.path.join(target_dir, fname)
         shutil.move(src, dst)
-        self.history.append((fname, class_label, dst, src))  # для undo
+        self.history.append((fname, class_label_en, dst, src))
         del self.image_files[self.index]
         self.total -= 1
         self.load_image()
@@ -141,43 +154,86 @@ class LabelTool:
         last = self.history.pop()
         fname, label, dst, src = last
         if label == 'deleted':
-            # восстановить удалённый файл невозможно (можно только отменить последнее перемещение)
             return
-        # Переместить обратно
         if os.path.exists(dst):
             shutil.move(dst, src)
-        # Удалить последнюю строку из аннотации
         if os.path.exists(self.annotation_path):
             with open(self.annotation_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
             with open(self.annotation_path, 'w', encoding='utf-8') as f:
                 f.writelines(lines[:-1])
-        # Вернуть в список
         self.image_files.insert(self.index, fname)
         self.total += 1
         self.load_image()
+
+    def on_enter(self, event=None):
+        sel = self.class_listbox.curselection()
+        if sel:
+            class_label = self.class_listbox.get(sel[0])
+            self.assign_label(class_label)
+
+    def on_arrow(self, event):
+        return
 
     def key_handler(self, event):
         if self.index >= self.total:
             return
         key = event.char
+        # --- Многозначный ввод номера класса ---
         if key.isdigit():
-            cls_index = int(key)
-            if cls_index == 0:
-                self.assign_label('negative')
-            elif 1 <= cls_index <= len(SYMBOL_CLASSES):
-                self.assign_label(SYMBOL_CLASSES[cls_index - 1])
-        elif key == 'n':
-            self.assign_label('negative')
-        elif key == 'x':
+            now = time.time()
+            if self.num_buffer and now - self.last_num_time > self.num_timeout:
+                self.num_buffer = ''
+            self.num_buffer += key
+            self.last_num_time = now
+            try:
+                cls_index = int(self.num_buffer)
+                if 1 <= cls_index <= len(SYMBOL_CLASSES):
+                    self.class_listbox.selection_clear(0, tk.END)
+                    self.class_listbox.select_set(cls_index - 1)
+                    self.class_listbox.activate(cls_index - 1)
+                    self.class_listbox.see(cls_index - 1)
+            except Exception:
+                self.num_buffer = ''
+            return
+        # --- Подтверждение выбора ---
+        if event.keysym == 'Return':
+            sel = self.class_listbox.curselection()
+            if sel:
+                class_label = self.class_listbox.get(sel[0])
+                self.assign_label(class_label)
+            self.num_buffer = ''
+        elif event.keysym == 'n':
+            self.assign_label('Негатив')
+            self.num_buffer = ''
+        elif event.keysym == 'x':
             self.delete_current()
-        elif key == 'z':
+            self.num_buffer = ''
+        elif event.keysym == 'z':
             self.undo()
-        elif key == 'q':
+            self.num_buffer = ''
+        elif event.keysym == 'q':
             self.root.quit()
+            self.num_buffer = ''
+        elif event.keysym == 'Up':
+            cur = self.class_listbox.curselection()
+            if cur and cur[0] > 0:
+                self.class_listbox.selection_clear(0, tk.END)
+                self.class_listbox.select_set(cur[0] - 1)
+                self.class_listbox.activate(cur[0] - 1)
+                self.class_listbox.see(cur[0] - 1)
+            self.num_buffer = ''
+        elif event.keysym == 'Down':
+            cur = self.class_listbox.curselection()
+            if cur and cur[0] < self.class_listbox.size() - 1:
+                self.class_listbox.selection_clear(0, tk.END)
+                self.class_listbox.select_set(cur[0] + 1)
+                self.class_listbox.activate(cur[0] + 1)
+                self.class_listbox.see(cur[0] + 1)
+            self.num_buffer = ''
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("Symbol Labeler (Minimalist)")
+    root.title("Music Symbol Labeler (RU)")
     app = LabelTool(root)
     root.mainloop() 
