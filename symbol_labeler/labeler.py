@@ -4,18 +4,17 @@ from PIL import Image, ImageTk
 import shutil
 import time
 
-# Пути по умолчанию (корень проекта)
+
 INPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'input'))
 OUTPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output'))
 SYMBOLS_PATH = os.path.join(os.path.dirname(__file__), 'symbols.txt')
 CLASS_MAP_PATH = os.path.join(os.path.dirname(__file__), 'class_map.txt')
 ANNOTATION_FILE = os.path.join(OUTPUT_DIR, 'labels.txt')
 
-# Загрузка русских названий классов
 with open(SYMBOLS_PATH, 'r', encoding='utf-8') as f:
     SYMBOL_CLASSES = [line.strip() for line in f if line.strip()]
 
-# Загружаем соответствие русских и английских названий
+
 CLASS_MAP = {}
 with open(CLASS_MAP_PATH, 'r', encoding='utf-8') as f:
     for line in f:
@@ -55,7 +54,7 @@ class LabelTool:
 
         self.root.configure(bg=self.bg)
 
-        # --- Слева: Listbox с классами ---
+
         self.left_frame = tk.Frame(root, bg=self.frame_bg)
         self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=18, pady=18)
         self.class_listbox = tk.Listbox(self.left_frame, width=24, height=18, font=("Consolas", 15),
@@ -70,7 +69,7 @@ class LabelTool:
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.class_listbox.config(yscrollcommand=self.scrollbar.set)
 
-        # --- Справа: изображение и инфо ---
+  
         self.right_frame = tk.Frame(root, bg=self.bg)
         self.right_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=18, pady=18)
         self.img_label = tk.Label(self.right_frame, bg=self.bg)
@@ -78,7 +77,7 @@ class LabelTool:
         self.info = tk.Label(self.right_frame, text="", fg=self.fg, bg=self.bg, font=("Consolas", 13))
         self.info.pack(pady=5)
 
-        # --- Снизу: кнопки ---
+
         self.bottom_frame = tk.Frame(self.right_frame, bg=self.bg)
         self.bottom_frame.pack(side=tk.BOTTOM, pady=10)
         self.btn_undo = tk.Button(self.bottom_frame, text="Отменить", width=12, height=1,
@@ -179,7 +178,6 @@ class LabelTool:
         if self.index >= self.total:
             return
         key = event.char
-        # --- Многозначный ввод номера класса ---
         if key.isdigit():
             now = time.time()
             if self.num_buffer and now - self.last_num_time > self.num_timeout:
@@ -196,7 +194,6 @@ class LabelTool:
             except Exception:
                 self.num_buffer = ''
             return
-        # --- Подтверждение выбора ---
         if event.keysym == 'Return':
             sel = self.class_listbox.curselection()
             if sel:
