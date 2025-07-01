@@ -1,2 +1,0 @@
-clef_g/myprefix_clef_part_1.png 0 15 47 87
-clef_g/myprefix_clef2_part_1.png 0 4 31 62
