@@ -1,0 +1,35 @@
+Диез:diez
+Бемоль:flat
+Бекар:natural
+Двойной диез:sharp_double
+Двойной бемоль:flat_double
+Скрипичный ключ:clef_g
+Басовый клч:clef_f
+Альтовый ключ:clef_c
+Головка ноты:note_head
+Четвертная нота:note_quarter
+Половинная нота:note_half
+Целая нота:note_whole
+Восьмая нота:note_eighth
+Шестнадцатая нота:note_sixteenth
+Пауза целая:pause_whole
+Пауза половинная:pause_half
+Пауза четвертная:pause_quarter
+Пауза восьмая:pause_eighth
+Пауза шестнадцатая:pause_sixteenth
+Акцент:accent
+Стаккато:staccato
+Легато:slur
+Крещендо:crescendo
+Диминуэндо:decrescendo
+Фермато:fermata
+Трель:trill
+Мордент:mordent
+Группетто:turn
+Арпеджио:arpeggio
+Точка:dot
+Штиль:beam
+Тактовая черта:barline
+Двойная тактовая черта:double_barline
+Начало репризы:repeat_start
+Конец репризы:repeat_end 
