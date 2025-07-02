@@ -2,5 +2,6 @@
 recognize/samples/
 recognize/results/
 recognize/classifier/ 
-input/storage/
+data_workbench/input/
+data_workbench/input_storage/
 .idea/
