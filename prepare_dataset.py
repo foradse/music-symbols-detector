@@ -28,24 +28,33 @@ def main():
     random.seed(42)
 
 
+    print("\nПроверка классов в recognize/positive_images:")
+    pos_classes = [cls for cls in os.listdir(SOURCE_POS) if (SOURCE_POS / cls).is_dir()]
+    total_pos = 0
+    for cls in pos_classes:
+        files = list((SOURCE_POS / cls).glob("*.png"))
+        print(f"  {cls}: {len(files)} файлов")
+        total_pos += len(files)
+    if total_pos == 0:
+        print("[!] Нет данных в recognize/positive_images. Проверьте структуру и наличие файлов.")
+
+    neg_files = list(SOURCE_NEG.glob("*.png"))
+    print(f"\nНегативные примеры: {len(neg_files)} файлов в recognize/negative_images")
+    if len(neg_files) == 0:
+        print("[!] Нет данных в recognize/negative_images. Проверьте структуру и наличие файлов.")
+
     for split in ['train', 'val']:
-        for cls in os.listdir(SOURCE_POS):
+        for cls in pos_classes:
             prepare_dir(DEST / split / cls)
         prepare_dir(DEST / split / 'negative')
 
-
-    for cls in os.listdir(SOURCE_POS):
+    for cls in pos_classes:
         cls_path = SOURCE_POS / cls
-        if not cls_path.is_dir():
-            continue
         files = list(cls_path.glob("*.png"))
         split_and_copy(files, DEST / 'train' / cls, DEST / 'val' / cls)
 
-
-    neg_files = list(SOURCE_NEG.glob("*.png"))
     split_and_copy(neg_files, DEST / 'train' / 'negative', DEST / 'val' / 'negative')
-
-    print("✅ Датасет собран в папке /dataset")
+    print("\n Датасет собран в папке /dataset")
 
 if __name__ == "__main__":
     main() 

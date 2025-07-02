@@ -15,15 +15,14 @@
 
 ```
 project-root/
-├── input/                # Исходные изображения для разметки
-├── output/               # Результаты ручной разметки
-│   ├── positive/         # Классы размеченных символов
-│   ├── negative/         # Негативные примеры
-│   └── labels.txt        # Аннотации: имя файла, класс (англ.)
-├── symbol_labeler/       # Инструменты для ручной сортировки и аннотирования
-│   ├── labeler.py        # Графическая утилита для разметки
-│   ├── symbols.txt       # Список классов для разметки (русские названия)
-│   └── class_map.txt     # Соответствие: русское название → английское имя класса
+├── data_workbench/
+│   ├── input/           # Исходные изображения для разметки
+│   ├── output/          # Результаты ручной разметки
+│   ├── input_storage/   # Временное хранилище (резервные копии, тестовые данные)
+│   └── symbol_labeler/  # Инструменты для ручной сортировки и аннотирования
+│       ├── labeler.py        # Графическая утилита для разметки
+│       ├── symbols.txt       # Список классов для разметки (русские названия)
+│       └── class_map.txt     # Соответствие: русское название → английское имя класса
 ├── recognize/            # Модули и данные для обучения и инференса
 │   ├── positive_images/  # Папки с изображениями по классам (после разметки)
 │   └── negative_images/  # Папка с негативными примерами
@@ -40,7 +39,8 @@ project-root/
 │       ├── note_head_quarter/
 │       ├── ...
 │       └── negative/
-└── prepare_dataset.py    # Скрипт для подготовки датасета
+├── prepare_dataset.py    # Скрипт для подготовки датасета
+└── ...
 ```
 
 ---
@@ -48,17 +48,17 @@ project-root/
 ## Быстрый старт
 
 ### 1. Ручная разметка изображений
-- Поместите неразмеченные изображения в папку `input/`.
+- Поместите неразмеченные изображения в папку `data_workbench/input/`.
 - Запустите разметчик:
   ```bash
-  python symbol_labeler/labeler.py
+  python data_workbench/symbol_labeler/labeler.py
   ```
 - Используйте горячие клавиши для сортировки по классам (см. `symbols.txt`).
-- После разметки изображения перемещаются в `output/positive/<класс>/` или `output/negative/`.
-- Аннотации сохраняются в `output/labels.txt`.
+- После разметки изображения перемещаются в `data_workbench/output/positive/<класс>/` или `data_workbench/output/negative/`.
+- Аннотации сохраняются в `data_workbench/output/labels.txt`.
 
 ### 2. Подготовка датасета для обучения
-- После разметки скопируйте содержимое `output/positive/` и `output/negative/` в `recognize/positive_images/` и `recognize/negative_images/` соответственно (или настройте пайплайн под свою структуру).
+- После разметки скопируйте содержимое `data_workbench/output/positive/` и `data_workbench/output/negative/` в `recognize/positive_images/` и `recognize/negative_images/` соответственно (или настройте пайплайн под свою структуру).
 - Запустите скрипт подготовки датасета:
   ```bash
   python prepare_dataset.py
@@ -111,22 +111,34 @@ def split_and_copy(src_paths, train_dir, val_dir):
 def main():
     random.seed(42)
 
+    print("\nПроверка классов в recognize/positive_images:")
+    pos_classes = [cls for cls in os.listdir(SOURCE_POS) if (SOURCE_POS / cls).is_dir()]
+    total_pos = 0
+    for cls in pos_classes:
+        files = list((SOURCE_POS / cls).glob("*.png"))
+        print(f"  {cls}: {len(files)} файлов")
+        total_pos += len(files)
+    if total_pos == 0:
+        print("[!] Нет данных в recognize/positive_images. Проверьте структуру и наличие файлов.")
+
+    neg_files = list(SOURCE_NEG.glob("*.png"))
+    print(f"\nНегативные примеры: {len(neg_files)} файлов в recognize/negative_images")
+    if len(neg_files) == 0:
+        print("[!] Нет данных в recognize/negative_images. Проверьте структуру и наличие файлов.")
+
     for split in ['train', 'val']:
-        for cls in os.listdir(SOURCE_POS):
+        for cls in pos_classes:
             prepare_dir(DEST / split / cls)
         prepare_dir(DEST / split / 'negative')
 
-    for cls in os.listdir(SOURCE_POS):
+    for cls in pos_classes:
         cls_path = SOURCE_POS / cls
-        if not cls_path.is_dir():
-            continue
         files = list(cls_path.glob("*.png"))
         split_and_copy(files, DEST / 'train' / cls, DEST / 'val' / cls)
 
-    neg_files = list(SOURCE_NEG.glob("*.png"))
     split_and_copy(neg_files, DEST / 'train' / 'negative', DEST / 'val' / 'negative')
 
-    print("✅ Датасет собран в папке /dataset")
+    print("\n Датасет собран в папке /dataset")
 
 if __name__ == "__main__":
     main()
@@ -148,17 +160,15 @@ if __name__ == "__main__":
 
 ### clear_output.py
 
-Скрипт `output/clear_output.py` очищает папку `output/` от всех файлов и папок, кроме служебных файлов `.gitkeep` и самого скрипта `clear_output.py`.
+Скрипт `data_workbench/output/clear_output.py` очищает папку `data_workbench/output/` от всех файлов и папок, кроме служебных файлов `.gitkeep` и самого скрипта `clear_output.py`.
 
 **Использование:**
 ```bash
-python output/clear_output.py
+python data_workbench/output/clear_output.py
 ```
 
 - После запуска все размеченные изображения, аннотации и подпапки в `output/` будут удалены.
 - Скрипт полезен для сброса состояния перед новой разметкой или тестированием.
 - **Внимание:** восстановить удалённые данные будет невозможно!
-
----
 
 
