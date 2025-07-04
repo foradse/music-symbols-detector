@@ -4,7 +4,7 @@
 Двойной диез:sharp_double
 Двойной бемоль:flat_double
 Скрипичный ключ:clef_g
-Басовый клч:clef_f
+Басовый ключ:clef_f
 Альтовый ключ:clef_c
 Головка ноты:note_head
 Четвертная нота:note_quarter

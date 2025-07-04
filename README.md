@@ -39,7 +39,7 @@ project-root/
 │       ├── note_head_quarter/
 │       ├── ...
 │       └── negative/
-├── prepare_dataset.py    # Скрипт для подготовки датасета
+├── build_dataset.py    # Скрипт для подготовки датасета
 └── ...
 ```
 
