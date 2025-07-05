@@ -92,5 +92,6 @@ instance/
 .env.production.local
 
 # Игнорировать временные данные и результаты
+recogize_old/
 data_workbench/input/
 data_workbench/input_storage/
