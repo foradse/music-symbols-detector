@@ -223,15 +223,15 @@ Flask/Streamlit-приложение для загрузки и обработк
 
 ## Распределение задач по группам
 
-| Группа | Название | Количество | Ответственный |
-|--------|----------|------------|---------------|
-| 1 | Classifier | 2 человека | Adlan |
-| 2 | Staff Detection | 2 человека | Adlan |
-| 3 | Symbol Detector | 2 человека | Adlan |
-| 4 | MusicXML Export | 2 человека | Adlan |
-| 5 | Augmentation | 1 человек | Adlan |
-| 6 | Interface | 1 человек | Adlan |
-| 7 | Pipeline | 1 человек | Adlan |
+| Группа | Название | Количество |
+|--------|----------|------------|
+| 1 | Classifier | 2 человека |
+| 2 | Staff Detection | 2 человека |
+| 3 | Symbol Detector | 2 человека | 
+| 4 | MusicXML Export | 2 человека | 
+| 5 | Augmentation | 1 человек |
+| 6 | Interface | 1 человек | 
+| 7 | Pipeline | 1 человек | 
 
 ---
 
