@@ -3,8 +3,8 @@ import shutil
 import random
 from pathlib import Path
 
-SOURCE_POS = Path("recognize/positive_images")
-SOURCE_NEG = Path("recognize/negative_images")
+SOURCE_POS = Path("recognize_old/positive_images")
+SOURCE_NEG = Path("recognize_old/negative_images")
 DEST = Path("dataset")
 SPLIT_RATIO = 0.8  # 80% train, 20% val
 
@@ -28,29 +28,36 @@ def main():
     random.seed(42)
 
 
-    print("\nПроверка классов в recognize/positive_images:")
+    print("\nПроверка классов в recognize_old/positive_images:")
     pos_classes = [cls for cls in os.listdir(SOURCE_POS) if (SOURCE_POS / cls).is_dir()]
     total_pos = 0
     for cls in pos_classes:
-        files = list((SOURCE_POS / cls).glob("*.png"))
+        files = []
+        for ext in ("*.png", "*.jpg", "*.jpeg", "*.JPG", "*.JPEG"):
+            files.extend((SOURCE_POS / cls).glob(ext))
         print(f"  {cls}: {len(files)} файлов")
         total_pos += len(files)
     if total_pos == 0:
-        print("[!] Нет данных в recognize/positive_images. Проверьте структуру и наличие файлов.")
+        print("[!] Нет данных в recognize_old/positive_images. Проверьте структуру и наличие файлов.")
 
-    neg_files = list(SOURCE_NEG.glob("*.png"))
-    print(f"\nНегативные примеры: {len(neg_files)} файлов в recognize/negative_images")
+    neg_files = []
+    for ext in ("*.png", "*.jpg", "*.jpeg", "*.JPG", "*.JPEG"):
+        neg_files.extend(SOURCE_NEG.rglob(ext))
+    print(f"\nНегативные примеры: {len(neg_files)} файлов в recognize_old/negative_images")
     if len(neg_files) == 0:
-        print("[!] Нет данных в recognize/negative_images. Проверьте структуру и наличие файлов.")
+        print("[!] Нет данных в recognize_old/negative_images. Проверьте структуру и наличие файлов.")
 
     for split in ['train', 'val']:
         for cls in pos_classes:
             prepare_dir(DEST / split / cls)
         prepare_dir(DEST / split / 'negative')
 
+
     for cls in pos_classes:
         cls_path = SOURCE_POS / cls
-        files = list(cls_path.glob("*.png"))
+        files = []
+        for ext in ("*.png", "*.jpg", "*.jpeg", "*.JPG", "*.JPEG"):
+            files.extend(cls_path.glob(ext))
         split_and_copy(files, DEST / 'train' / cls, DEST / 'val' / cls)
 
     split_and_copy(neg_files, DEST / 'train' / 'negative', DEST / 'val' / 'negative')
