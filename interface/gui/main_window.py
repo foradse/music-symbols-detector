@@ -9,6 +9,11 @@ class MainWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("Music Symbols Detector")
+        try:
+            icon_path = os.path.join(os.path.dirname(__file__), "Image", "Icon.ico")
+            self.root.iconbitmap(icon_path)
+        except Exception as e:
+            print(f"Не удалось загрузить иконку: {e}")
         width = self.root.winfo_screenwidth()
         height = self.root.winfo_screenheight()
         self.root.geometry(f"{width - 10}x{height - 80}+0+0")
