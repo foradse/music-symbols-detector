@@ -1,13 +1,10 @@
-# Music Symbols Recognition System
+# Music Symbols Detector
 
 ## Описание
 
-**Music Symbols Recognition System** — проект для автоматизации распознавания музыкальных символов на изображениях нотных листов с помощью компьютерного зрения и нейросетей.
+**Music Symbols Detector** — система для автоматического распознавания музыкальных символов на изображениях нотных листов с помощью компьютерного зрения и нейросетей.
 
-Включает:
-- инструменты для ручной разметки и подготовки датасета,
-- модули для препроцессинга и нарезки изображений,
-- инфраструктуру для обучения и тестирования моделей.
+Система включает полный пайплайн от обработки изображений до экспорта в MusicXML формат.
 
 ---
 
@@ -15,160 +12,233 @@
 
 ```
 project-root/
-├── data_workbench/
-│   ├── input/           # Исходные изображения для разметки
-│   ├── output/          # Результаты ручной разметки
-│   ├── input_storage/   # Временное хранилище (резервные копии, тестовые данные)
-│   └── symbol_labeler/  # Инструменты для ручной сортировки и аннотирования
-│       ├── labeler.py        # Графическая утилита для разметки
-│       ├── symbols.txt       # Список классов для разметки (русские названия)
-│       └── class_map.txt     # Соответствие: русское название → английское имя класса
-├── recognize/            # Модули и данные для обучения и инференса
-│   ├── positive_images/  # Папки с изображениями по классам (после разметки)
-│   └── negative_images/  # Папка с негативными примерами
-├── dataset/              # Готовый датасет для обучения (ImageFolder)
-│   ├── train/
+├── data_workbench/                # Инструменты и материалы для ручной разметки
+│   ├── input/                     # Исходные изображения
+│   ├── output/                    # Разметка
+│   └── symbol_labeler/           
+│       ├── labeler.py             # GUI-разметка
+│       ├── symbols.txt            # Список классов
+│       └── class_map.txt          # Соответствие русских и англ. названий
+
+├── recognize/                     # Датасет с примерами по классам
+│   ├── positive_images/           # Папки с примерами по классам
 │   │   ├── clef_g/
 │   │   ├── flat/
-│   │   ├── note_head_quarter/
-│   │   ├── ...
-│   │   └── negative/
+│   │   └── ...
+│   └── negative_images/           # Папка с негативными примерами
+
+├── dataset/                       # Основной датасет (создаётся скриптом)
+│   ├── train/                     # Папки с изображениями по классам
 │   └── val/
-│       ├── clef_g/
-│       ├── flat/
-│       ├── note_head_quarter/
-│       ├── ...
-│       └── negative/
-├── build_dataset.py    # Скрипт для подготовки датасета
-└── ...
+
+├── models/                        # Весы нейросетей
+│   └── classifier_cnn.pth
+
+├── classifier/                    # Группа 1 — Классификатор (2 человека)
+│   ├── model.py                   # Архитектура нейронной сети
+│   ├── train.py                   # Обучение модели
+│   ├── predict.py                 # Предсказание классов
+│   └── README.md                  # Документация группы
+
+├── staff_detection/               # Группа 2 — Поиск нотных линий (2 человека)
+│   ├── split_staffs.py            # Основной модуль детекции
+│   └── README.md                  # Документация группы
+
+├── symbol_detector/               # Группа 3 — Извлечение символов (2 человека)
+│   ├── extract_symbols.py         # Основной модуль извлечения
+│   └── README.md                  # Документация группы
+
+├── xml_exporter/                  # Группа 4 — Экспорт в MusicXML (2 человека)
+│   ├── export.py                  # Экспорт в MusicXML
+│   └── README.md                  # Документация группы
+
+├── augmentation/                  # Группа 5 — Аугментация данных (1 человек)
+│   ├── augment_dataset.py         # Аугментация датасета
+│   └── README.md                  # Документация группы
+
+├── interface/                     # Группа 6 — Веб-интерфейс (1 человек)
+│   ├── app.py                     # Основное приложение
+│   ├── gui/                       # GUI компоненты
+│   │   ├── main_window.py         # Главное окно
+│   │   ├── image_viewer.py        # Просмотрщик изображений
+│   │   └── results_view.py        # Отображение результатов
+│   ├── utils/                     # Утилиты
+│   │   ├── file_handler.py        # Обработка файлов
+│   │   └── image_utils.py         # Работа с изображениями
+│   └── README.md                  # Документация группы
+
+├── pipeline/                      # Группа 7 — Интеграция пайплайна (1 человек)
+│   ├── main.py                    # Основной пайплайн
+│   ├── config.py                  # Конфигурация
+│   ├── pipeline_manager.py        # Управление пайплайном
+│   ├── data_manager.py            # Управление данными
+│   ├── utils/                     # Утилиты
+│   │   ├── logger.py              # Настройка логирования
+│   │   ├── validators.py          # Валидация данных
+│   │   └── helpers.py             # Вспомогательные функции
+│   └── README.md                  # Документация группы
+
+├── music_symbols_core.py          # Основные функции всех групп
+├── build_dataset.py               # Скрипт преобразования recognize → dataset
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
 ## Быстрый старт
 
-### 1. Ручная разметка изображений
-- Поместите неразмеченные изображения в папку `data_workbench/input/`.
-- Запустите разметчик:
-  ```bash
-  python data_workbench/symbol_labeler/labeler.py
-  ```
-- Используйте горячие клавиши для сортировки по классам (см. `symbols.txt`).
-- После разметки изображения перемещаются в `data_workbench/output/positive/<класс>/` или `data_workbench/output/negative/`.
-- Аннотации сохраняются в `data_workbench/output/labels.txt`.
+### 1. Установка зависимостей
 
-### 2. Подготовка датасета для обучения
-- После разметки скопируйте содержимое `data_workbench/output/positive/` и `data_workbench/output/negative/` в `recognize/positive_images/` и `recognize/negative_images/` соответственно (или настройте пайплайн под свою структуру).
-- Запустите скрипт подготовки датасета:
-  ```bash
-  python prepare_dataset.py
-  ```
-- В результате появится папка `dataset/` с подпапками `train/` и `val/`, где изображения будут разложены по классам и разделены в соотношении 80/20.
-- Структура полностью совместима с `torchvision.datasets.ImageFolder`:
-  - `dataset/train/<class_name>/*.png`
-  - `dataset/val/<class_name>/*.png`
-
-### 3. Использование датасета
-- Для обучения моделей используйте папку `dataset/` с любым фреймворком, поддерживающим ImageFolder.
-
----
-
-## prepare_dataset.py
-
-Скрипт для автоматической подготовки датасета:
-- Очищает и пересоздаёт папки `dataset/train/` и `dataset/val/` для каждого класса.
-- Случайным образом делит изображения на train и val (80/20).
-- Поддерживает структуру, совместимую с ImageFolder.
-
-**Пример кода:**
-```python
-import os
-import shutil
-import random
-from pathlib import Path
-
-SOURCE_POS = Path("recognize/positive_images")
-SOURCE_NEG = Path("recognize/negative_images")
-DEST = Path("dataset")
-SPLIT_RATIO = 0.8  # 80% train, 20% val
-
-def prepare_dir(path):
-    if path.exists():
-        shutil.rmtree(path)
-    path.mkdir(parents=True)
-
-def split_and_copy(src_paths, train_dir, val_dir):
-    random.shuffle(src_paths)
-    split_idx = int(len(src_paths) * SPLIT_RATIO)
-    train_files = src_paths[:split_idx]
-    val_files = src_paths[split_idx:]
-
-    for f in train_files:
-        shutil.copy(f, train_dir / f.name)
-    for f in val_files:
-        shutil.copy(f, val_dir / f.name)
-
-def main():
-    random.seed(42)
-
-    print("\nПроверка классов в recognize/positive_images:")
-    pos_classes = [cls for cls in os.listdir(SOURCE_POS) if (SOURCE_POS / cls).is_dir()]
-    total_pos = 0
-    for cls in pos_classes:
-        files = list((SOURCE_POS / cls).glob("*.png"))
-        print(f"  {cls}: {len(files)} файлов")
-        total_pos += len(files)
-    if total_pos == 0:
-        print("[!] Нет данных в recognize/positive_images. Проверьте структуру и наличие файлов.")
-
-    neg_files = list(SOURCE_NEG.glob("*.png"))
-    print(f"\nНегативные примеры: {len(neg_files)} файлов в recognize/negative_images")
-    if len(neg_files) == 0:
-        print("[!] Нет данных в recognize/negative_images. Проверьте структуру и наличие файлов.")
-
-    for split in ['train', 'val']:
-        for cls in pos_classes:
-            prepare_dir(DEST / split / cls)
-        prepare_dir(DEST / split / 'negative')
-
-    for cls in pos_classes:
-        cls_path = SOURCE_POS / cls
-        files = list(cls_path.glob("*.png"))
-        split_and_copy(files, DEST / 'train' / cls, DEST / 'val' / cls)
-
-    split_and_copy(neg_files, DEST / 'train' / 'negative', DEST / 'val' / 'negative')
-
-    print("\n Датасет собран в папке /dataset")
-
-if __name__ == "__main__":
-    main()
+```bash
+pip install -r requirements.txt
 ```
 
+### 2. Подготовка датасета
+
+```bash
+python build_dataset.py
+```
+
+Это создаст структуру `dataset/train/` и `dataset/val/` с папками по классам, готовую для обучения.
+
+### 3. Обучение классификатора
+
+```bash
+cd classifier
+python train.py
+```
+
+### 4. Обработка нотного листа
+
+```bash
+cd pipeline
+python main.py path/to/sheet_music.png output_directory --model ../models/classifier_cnn.pth
+```
+
+### 5. Веб-интерфейс
+
+```bash
+cd interface
+python app.py
+```
+
+Откройте http://localhost:5000 в браузере.
+
 ---
 
-## symbols.txt
-- Список всех классов для разметки (по одному в строке).
-- Для добавления нового класса просто добавьте его название в этот файл.
+## Модули системы
 
-## class_map.txt
-- Соответствие между русскими названиями классов (для интерфейса) и английскими идентификаторами (для структуры папок и аннотаций). Формат:
-  `Русское название:английское_имя`
+### 1. Классификатор (`classifier/`) - Группа 1
 
----
+CNN-модель для распознавания музыкальных символов.
 
-## Служебные скрипты
-
-### clear_output.py
-
-Скрипт `data_workbench/output/clear_output.py` очищает папку `data_workbench/output/` от всех файлов и папок, кроме служебных файлов `.gitkeep` и самого скрипта `clear_output.py`.
+**Файлы:**
+- `model.py` - Архитектура нейронной сети
+- `train.py` - Обучение модели
+- `predict.py` - Предсказание классов
 
 **Использование:**
-```bash
-python data_workbench/output/clear_output.py
+```python
+from classifier.predict import predict_symbol
+
+result = predict_symbol(
+    image_path="symbol.png",
+    model_path="models/classifier_cnn.pth",
+    class_names=['clef_g', 'sharp', 'flat', ...]
+)
 ```
 
-- После запуска все размеченные изображения, аннотации и подпапки в `output/` будут удалены.
-- Скрипт полезен для сброса состояния перед новой разметкой или тестированием.
-- **Внимание:** восстановить удалённые данные будет невозможно!
+### 2. Детектор нотных линий (`staff_detection/`) - Группа 2
+
+Извлечение нотных станов из изображения.
+
+**Функции:**
+- Детекция горизонтальных линий
+- Группировка линий в станы
+- Извлечение областей станов
+
+### 3. Детектор символов (`symbol_detector/`) - Группа 3
+
+Извлечение отдельных символов из нотного стана.
+
+**Функции:**
+- Удаление линий стана
+- Поиск контуров символов
+- Фильтрация по размеру и позиции
+
+### 4. Экспортер XML (`xml_exporter/`) - Группа 4
+
+Создание MusicXML файлов из результатов распознавания.
+
+**Поддерживаемые элементы:**
+- Ключи (G, F, C)
+- Ноты и паузы
+- Знаки альтерации
+- Размеры и тональности
+
+### 5. Аугментация (`augmentation/`) - Группа 5
+
+Увеличение датасета с помощью трансформаций.
+
+**Методы:**
+- Поворот и масштабирование
+- Добавление шума
+- Изменение яркости/контрастности
+- Эластичные трансформации
+
+### 6. Веб-интерфейс (`interface/`) - Группа 6
+
+Flask/Streamlit-приложение для загрузки и обработки изображений.
+
+**Возможности:**
+- Загрузка изображений
+- Визуализация результатов
+- Скачивание MusicXML
+
+### 7. Главный пайплайн (`pipeline/`) - Группа 7
+
+Объединение всех модулей в единый процесс.
+
+**Этапы обработки:**
+1. Извлечение нотных станов
+2. Детекция символов
+3. Классификация
+4. Создание MusicXML
+5. Генерация отчета
+
+---
+
+## Поддерживаемые классы символов
+
+- **Ключи:** clef_g, clef_f, clef_c, clef_g8, clef_oct_up, clef_oct_down
+- **Знаки альтерации:** sharp, flat, natural, double_sharp
+- **Ноты:** note_whole, note_head_half, note_head_quarter
+- **Паузы:** pause_whole_half, pause_quarter, pause_eighth, pause_sixteenth
+- **Хвосты:** tail_eighth, tail_sixteenth, tail_eighth_group, tail_sixteenth_group
+- **Размеры:** time_2_2, time_2_4, time_3_2, time_3_4, time_3_8, time_4_4, time_6_8, time_9_8, time_common
+- **Другие:** dot, ending_1, ending_2, repeat
+
+---
+
+## Распределение задач по группам
+
+| Группа | Название | Количество | Ответственный |
+|--------|----------|------------|---------------|
+| 1 | Classifier | 2 человека | Adlan |
+| 2 | Staff Detection | 2 человека | Adlan |
+| 3 | Symbol Detector | 2 человека | Adlan |
+| 4 | MusicXML Export | 2 человека | Adlan |
+| 5 | Augmentation | 1 человек | Adlan |
+| 6 | Interface | 1 человек | Adlan |
+| 7 | Pipeline | 1 человек | Adlan |
+
+---
+
+## Основные файлы
+
+- `music_symbols_core.py` - Содержит все основные функции и классы для всех групп
+- `build_dataset.py` - Скрипт для подготовки датасета
+- `requirements.txt` - Зависимости проекта
 
 
