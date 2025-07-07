@@ -57,3 +57,31 @@ class ImageViewer:
             self.label.configure(text=f"Ошибка загрузки: {str(e)}", image=None)
             self.status_label.configure(text="Ошибка загрузки изображения")
             raise e
+
+    def clear_image(self):
+        """Сбрасывает изображение и состояние просмотра к начальным значениям"""
+        try:
+            # Удаляем ссылку на CTkImage
+            if hasattr(self, 'ctk_image'):
+                del self.ctk_image
+
+            # Очищаем label корректно
+            self.label.configure(
+                image=None,  # Теперь можно использовать None
+                text="Изображение не загружено",
+                text_color="#888888"
+            )
+            self.status_label.configure(
+                text="Готов к загрузке",
+                text_color="#aaaaaa"
+            )
+
+            # Принудительно собираем мусор
+            if hasattr(self, 'image'):
+                del self.image
+                import gc
+                gc.collect()
+
+        except Exception as e:
+            print(f"Ошибка при очистке изображения: {e}")
+            self.status_label.configure(text="Ошибка при очистке")

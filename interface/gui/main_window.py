@@ -195,5 +195,26 @@ class MainWindow:
         self.textbox.configure(state="disabled")
 
     def clear_all(self):
-        # Здесь будет очистка
-        pass
+        """Очищает все поля и сбрасывает состояние приложения"""
+        try:
+            # Очищаем изображение в первую очередь
+            if hasattr(self.image_viewer, 'clear_image'):
+                self.image_viewer.clear_image()
+
+            # Даем время на обновление GUI
+            self.root.update_idletasks()
+
+            # Затем очищаем остальные элементы
+            self.results_view.clear_results()
+
+            self.textbox.configure(state="normal")
+            self.textbox.delete("1.0", "end")
+            self.textbox.insert("end", "Готов к работе\n")
+            self.textbox.configure(state="disabled")
+
+            self.show_message("Все данные были успешно очищены", "Состояние:")
+
+        except Exception as e:
+            error_msg = f"Ошибка при очистке: {str(e)}"
+            print(error_msg)
+            self.show_message(error_msg, "Ошибка")
