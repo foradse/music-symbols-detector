@@ -81,3 +81,10 @@ class ResultsView:
         </measure>
       </part>
     </score-partwise>"""
+
+    def clear_results(self):
+        """Очищает результаты анализа и сбрасывает текстовое поле"""
+        self.textbox.configure(state="normal")
+        self.textbox.delete("1.0", "end")
+        self.textbox.insert("end", "Результаты будут отображены здесь после обработки")
+        self.textbox.configure(state="disabled")
