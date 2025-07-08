@@ -17,6 +17,11 @@ class MainWindow:
         width = self.root.winfo_screenwidth()
         height = self.root.winfo_screenheight()
         self.root.geometry(f"{width - 10}x{height - 80}+0+0")
+
+        # Переменные для хранения данных
+        self.current_image_path = None
+        self.processed_data = None
+
         # Создаем основные компоненты
         self.create_widgets()
         self.setup_layout()
@@ -56,10 +61,8 @@ class MainWindow:
             height=32
         )
 
-
         # Основная область контента
         self.content_frame = ctk.CTkFrame(self.main_frame, fg_color="#333333")
-
 
         self.textbox = ctk.CTkTextbox(
             self.content_frame,
@@ -78,7 +81,8 @@ class MainWindow:
             text_color="black",
             font=("Arial", 12),
             width=120,
-            height=32
+            height=32,
+            state="disabled"  # Изначально кнопка неактивна
         )
 
         self.save_btn = ctk.CTkButton(
@@ -89,7 +93,8 @@ class MainWindow:
             text_color="black",
             font=("Arial", 12),
             width=180,
-            height=32
+            height=32,
+            state="disabled"  # Изначально кнопка неактивна
         )
 
         self.clear_btn = ctk.CTkButton(
@@ -129,6 +134,7 @@ class MainWindow:
 
     def setup_events(self):
         self.load_btn.configure(command=self.load_image)
+        self.process_btn.configure(command=self.process_image)
         self.save_btn.configure(command=self.save_results)
         self.clear_btn.configure(command=self.clear_all)
 
@@ -144,30 +150,66 @@ class MainWindow:
             return
 
         try:
+            # Сохраняем путь к файлу
+            self.current_image_path = file_path
+
             # Загружаем изображение через ImageViewer
             self.image_viewer.load_image(file_path)
 
+            # Активируем кнопку "Обработать"
+            self.process_btn.configure(state="normal")
+
             # Можно добавить дополнительную информацию о загруженном файле
             filename = os.path.basename(file_path)
-            self.show_message(filename, "Изображение загружено:")
-
+            self.show_message(f"Изображение загружено: {filename}")
 
         except Exception as e:
             # Обработка ошибок
             error_msg = f"Ошибка загрузки: {str(e)}"
-            print(error_msg)  # Или вывести в статус
-            self.show_message(error_msg, "end")
-            # Можно также показать сообщение об ошибке
+            print(error_msg)
+            self.show_message(error_msg)
             self.image_viewer.label.configure(text=error_msg, image=None)
 
-    def save_results(self):
-        # Получаем данные для сохранения (предполагаем, что results_view имеет метод get_musicxml())
-        try:
-            musicxml_data = self.results_view.get_musicxml()
-            if not musicxml_data:
-                self.show_message("Нет данных для сохранения.", "Ошибка")
-                return
+    def process_image(self):
+        """Обработка выбранного изображения"""
+        if not self.current_image_path:
+            self.show_message("Нет загруженного изображения для обработки", "Ошибка")
+            return
 
+        try:
+            # Показываем сообщение о начале обработки
+            self.show_message("Начата обработка изображения...", "Статус:")
+
+            # Делаем кнопку неактивной во время обработки
+            self.process_btn.configure(state="disabled")
+            self.root.update()  # Обновляем GUI
+
+            # Здесь вызываем функцию обработки (заглушка)
+            # выбранное изображение передается в обработку
+            self.processed_data = self.results_view.get_musicxml(self.current_image_path)
+
+            # Передаем результат в results_view
+            if self.processed_data:
+                # Активируем кнопку сохранения
+                self.save_btn.configure(state="normal")
+                self.show_message("Обработка завершена успешно", "Статус:")
+            else:
+                self.show_message("Не удалось обработать изображение", "Ошибка")
+
+        except Exception as e:
+            self.show_message(f"Ошибка при обработке: {str(e)}", "Ошибка")
+        finally:
+            # В любом случае делаем кнопку снова активной
+            self.process_btn.configure(state="normal")
+
+
+    def save_results(self):
+        """Сохранение обработанных результатов"""
+        if not self.processed_data:
+            self.show_message("Нет данных для сохранения.", "Ошибка")
+            return
+
+        try:
             # Открываем диалог сохранения файла
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".musicxml",
@@ -180,39 +222,48 @@ class MainWindow:
 
             # Сохраняем данные в файл
             with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(musicxml_data)
+                f.write(str(self.processed_data))
 
-            # Показываем сообщение об успешном сохранении
-            self.show_message(f"Файл успешно сохранен:\n{file_path}", "Сохранение завершено.")
+            self.show_message(f"Файл успешно сохранен: {file_path}", "Успех")
 
         except Exception as e:
-            self.show_message(f"Ошибка при сохранении файла:\n{str(e)}", "Ошибка сохранения.")
+            self.show_message(f"Ошибка при сохранении: {str(e)}", "Ошибка")
 
-    def show_message(self, message, title):
+    def show_message(self, message, title=None):
         """Вспомогательный метод для показа сообщений"""
         self.textbox.configure(state="normal")
-        self.textbox.insert("end", f"{title} {message}\n")  # Или вывести в статус, если есть
+        if title:
+            self.textbox.insert("end", f"{title}: {message}\n")
+        else:
+            self.textbox.insert("end", f"{message}\n")
+        self.textbox.see("end")
         self.textbox.configure(state="disabled")
 
     def clear_all(self):
         """Очищает все поля и сбрасывает состояние приложения"""
         try:
-            # Очищаем изображение в первую очередь
+            # Очищаем изображение
             if hasattr(self.image_viewer, 'clear_image'):
                 self.image_viewer.clear_image()
 
-            # Даем время на обновление GUI
-            self.root.update_idletasks()
-
-            # Затем очищаем остальные элементы
+            # Очищаем результаты
             self.results_view.clear_results()
 
+            # Сбрасываем переменные
+            self.current_image_path = None
+            self.processed_data = None
+
+            # Деактивируем кнопки
+            self.process_btn.configure(state="disabled")
+            self.save_btn.configure(state="disabled")
+
+            # Очищаем текстовое поле
             self.textbox.configure(state="normal")
             self.textbox.delete("1.0", "end")
             self.textbox.insert("end", "Готов к работе\n")
             self.textbox.configure(state="disabled")
 
-            self.show_message("Все данные были успешно очищены", "Состояние:")
+            self.show_message("Все данные были успешно очищены", "Статус:")
 
         except Exception as e:
             error_msg = f"Ошибка при очистке: {str(e)}"

@@ -44,7 +44,10 @@ class ResultsView:
         self.textbox.configure(state="disabled")
 
     # В классе ResultsView добавьте:
-    def get_musicxml(self):
+    def get_musicxml(self, image, staves=0, symbols=0, accuracy=1):
+        # Тут вызываем функцию для получения MusicXML файла и данных staves, symbols, accuracy
+        # передаем данные в функцию staves, symbols, accuracy в функцию ниже, а файл возвращаем
+        self.update_results(staves, symbols, accuracy)
         # Временная заглушка - замените на реальную генерацию MusicXML
         return """<?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
