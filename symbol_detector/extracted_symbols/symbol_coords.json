@@ -1,0 +1,155 @@
+[
+  {
+    "filename": "symbol_0.png",
+    "bbox": [
+      83,
+      110,
+      10,
+      16
+    ]
+  },
+  {
+    "filename": "symbol_1.png",
+    "bbox": [
+      256,
+      103,
+      5,
+      11
+    ]
+  },
+  {
+    "filename": "symbol_2.png",
+    "bbox": [
+      1333,
+      78,
+      5,
+      11
+    ]
+  },
+  {
+    "filename": "symbol_3.png",
+    "bbox": [
+      1602,
+      77,
+      6,
+      11
+    ]
+  },
+  {
+    "filename": "symbol_4.png",
+    "bbox": [
+      1186,
+      72,
+      17,
+      52
+    ]
+  },
+  {
+    "filename": "symbol_5.png",
+    "bbox": [
+      569,
+      68,
+      18,
+      50
+    ]
+  },
+  {
+    "filename": "symbol_6.png",
+    "bbox": [
+      846,
+      67,
+      15,
+      51
+    ]
+  },
+  {
+    "filename": "symbol_7.png",
+    "bbox": [
+      494,
+      67,
+      18,
+      51
+    ]
+  },
+  {
+    "filename": "symbol_8.png",
+    "bbox": [
+      234,
+      67,
+      17,
+      52
+    ]
+  },
+  {
+    "filename": "symbol_9.png",
+    "bbox": [
+      646,
+      61,
+      17,
+      51
+    ]
+  },
+  {
+    "filename": "symbol_10.png",
+    "bbox": [
+      918,
+      53,
+      16,
+      53
+    ]
+  },
+  {
+    "filename": "symbol_11.png",
+    "bbox": [
+      772,
+      53,
+      18,
+      53
+    ]
+  },
+  {
+    "filename": "symbol_12.png",
+    "bbox": [
+      118,
+      53,
+      12,
+      35
+    ]
+  },
+  {
+    "filename": "symbol_13.png",
+    "bbox": [
+      1580,
+      47,
+      18,
+      52
+    ]
+  },
+  {
+    "filename": "symbol_14.png",
+    "bbox": [
+      1310,
+      42,
+      17,
+      51
+    ]
+  },
+  {
+    "filename": "symbol_15.png",
+    "bbox": [
+      1040,
+      42,
+      19,
+      51
+    ]
+  },
+  {
+    "filename": "symbol_16.png",
+    "bbox": [
+      75,
+      34,
+      33,
+      89
+    ]
+  }
+]
