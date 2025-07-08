@@ -1,14 +1,16 @@
 import os
-
+import tkinter as tk
 import customtkinter as ctk
-from PIL import Image, ImageOps
+from PIL import Image, ImageTk
+import gc
 
 
 class ImageViewer:
     def __init__(self, parent):
         self.parent = parent
-        self.image = None
-        self.ctk_image = None
+        self.tk_image = None
+        self.pil_image = None
+        self.is_destroyed = False  # Флаг для отслеживания состояния виджета
 
         self.create_widgets()
 
@@ -21,15 +23,16 @@ class ImageViewer:
             corner_radius=5
         )
 
-        self.label = ctk.CTkLabel(
+        # Создаем стандартный Tkinter Label внутри CTkFrame
+        self.label = tk.Label(
             self.frame,
             text="Изображение не загружено",
-            text_color="#888888",
-            fg_color="#1e1e1e"
+            fg="#888888",
+            bg="#1e1e1e",
+            compound="center"
         )
         self.label.pack(expand=True, fill="both", padx=10, pady=10)
 
-        # Добавляем статусную строку
         self.status_label = ctk.CTkLabel(
             self.frame,
             text="Готов к загрузке",
@@ -39,49 +42,86 @@ class ImageViewer:
         self.status_label.pack(side="bottom", fill="x", padx=5, pady=5)
 
     def load_image(self, file_path):
+        if self.is_destroyed:
+            return False
+
         try:
-            img = Image.open(file_path)
-            img.thumbnail((600, 600))
-            background = Image.new("RGB", img.size, "#1e1e1e")
-            background.paste(img, (0, 0), img if img.mode == "RGBA" else None)
+            # Очищаем предыдущее изображение
+            self.clear_image()
 
-            self.ctk_image = ctk.CTkImage(
-                light_image=background,
-                dark_image=background,
-                size=background.size
-            )
-            self.label.configure(image=self.ctk_image, text="")
-            self.status_label.configure(text=f"Загружено: {os.path.basename(file_path)}")
+            # Загружаем новое изображение
+            self.pil_image = Image.open(file_path)
 
-        except Exception as e:
-            self.label.configure(text=f"Ошибка загрузки: {str(e)}", image=None)
-            self.status_label.configure(text="Ошибка загрузки изображения")
-            raise e
+            # Масштабируем с сохранением пропорций
+            width, height = self.pil_image.size
+            max_size = 800
+            if width > max_size or height > max_size:
+                ratio = min(max_size / width, max_size / height)
+                new_size = (int(width * ratio), int(height * ratio))
+                self.pil_image = self.pil_image.resize(new_size, Image.Resampling.LANCZOS)
 
-    def clear_image(self):
-        """Сбрасывает изображение и состояние просмотра к начальным значениям"""
-        try:
-            # Удаляем ссылку на CTkImage
-            if hasattr(self, 'ctk_image'):
-                del self.ctk_image
+            # Конвертируем в Tkinter PhotoImage
+            self.tk_image = ImageTk.PhotoImage(self.pil_image)
 
-            # Очищаем label корректно
-            self.label.configure(
-                image=None,  # Теперь можно использовать None
-                text="Изображение не загружено",
-                text_color="#888888"
-            )
+            # Отображаем изображение
+            self.label.configure(image=self.tk_image, text="")
             self.status_label.configure(
-                text="Готов к загрузке",
+                text=f"Загружено: {os.path.basename(file_path)}",
                 text_color="#aaaaaa"
             )
 
-            # Принудительно собираем мусор
-            if hasattr(self, 'image'):
-                del self.image
-                import gc
-                gc.collect()
+            return True
 
         except Exception as e:
-            print(f"Ошибка при очистке изображения: {e}")
-            self.status_label.configure(text="Ошибка при очистке")
+            if not self.is_destroyed:
+                self.label.configure(
+                    text=f"Ошибка загрузки: {str(e)}",
+                    fg="#ff5555"
+                )
+                self.status_label.configure(
+                    text=f"Ошибка загрузки: {str(e)}",
+                    text_color="#ff5555"
+                )
+            return False
+
+    def clear_image(self):
+        """Безопасная очистка текущего изображения"""
+        if self.is_destroyed:
+            return
+
+        try:
+            # Удаляем изображение из виджета
+            if self.label.winfo_exists():
+                self.label.configure(image="", text="Изображение не загружено", fg="#888888")
+
+            # Очищаем статус
+            if self.status_label.winfo_exists():
+                self.status_label.configure(text="Готов к загрузке", text_color="#aaaaaa")
+
+            # Закрываем PIL Image
+            if self.pil_image is not None:
+                self.pil_image.close()
+                self.pil_image = None
+
+            # Очищаем ссылку на Tkinter image
+            self.tk_image = None
+
+            # Принудительный сбор мусора
+            gc.collect()
+
+        except Exception as e:
+            # Игнорируем ошибки, если виджет уже уничтожен
+            pass
+
+    def destroy(self):
+        """Вызывается при уничтожении виджета"""
+        self.is_destroyed = True
+        self.clear_image()
+
+        # Закрываем PIL Image, если он еще существует
+        if self.pil_image is not None:
+            self.pil_image.close()
+            self.pil_image = None
+
+        # Очищаем ссылку на Tkinter image
+        self.tk_image = None
