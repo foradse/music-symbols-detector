@@ -12,6 +12,9 @@ class StaffDetector:
         Args:
             image_path: путь к изображению нотного листа
         """
+
+        self.contrasted = None
+        self.blur = None
         self.image_path = image_path
         self.image = None
         self.gray = None
@@ -27,8 +30,12 @@ class StaffDetector:
         if self.image is None:
             raise ValueError(f"Не удалось загрузить изображение: {self.image_path}")
 
+        self.contrasted = cv2.convertScaleAbs(self.image, alpha=1, beta=0)
+
+        self.blur = cv2.GaussianBlur(self.contrasted, (1, 1), 0)
+
         # Преобразование в градации серого
-        self.gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        self.gray = cv2.cvtColor(self.blur, cv2.COLOR_BGR2GRAY)
 
         # Бинаризация изображения
         self.binary = cv2.threshold(
@@ -36,7 +43,7 @@ class StaffDetector:
         )[1]
 
     def detect_horizontal_lines(self,
-                                min_line_length: int = 100,
+                                min_line_length: int = 250,
                                 max_line_gap: int = 10):
         """
         Обнаружение горизонтальных линий на изображении
@@ -61,7 +68,7 @@ class StaffDetector:
                 self.horizontal_lines.append((x, y, x + w - 1, y))
 
     def group_lines_into_staffs(self,
-                                max_line_gap: int = 20,
+                                max_line_gap: int = 30,
                                 min_lines_in_staff: int = 4):
         """
         Группировка линий в нотные станы
@@ -256,6 +263,7 @@ class StaffDetector:
 if __name__ == '__main__':
     # Пример использования класса
     detector = StaffDetector("test.png")
+
     # Запуск полного пайплайна обработки
     staff_regions = detector.run_pipeline(output_dir="extracted_staffs")
 
