@@ -13,14 +13,14 @@ def MusicXML_Exporter(Data_note):
     s.metadata.title = "NO TITLE"
     s.metadata.composer = "NO COMPOSER"
 
-    # """Добавляем ключ"""
-    # dict_key={"clef_g":clef.TrebleClef(),"clef_f":clef.BassClef(),"clef_c":clef.AltoClef()}
-    # clif=0
-    # for simbol in Sort_data_note:
-    #     if simbol[0] in dict_key:
-    #         clif=dict_key[simbol[0]]
-    #         Sort_data_note.remove(simbol)
-    # s.append(clif)
+    """Добавляем ключ"""
+    dict_key={"clef_g":clef.TrebleClef(),"clef_f":clef.BassClef(),"clef_c":clef.AltoClef()}
+    clif=0
+    for simbol in Sort_data_note:
+        if simbol[0] in dict_key:
+            clif=dict_key[simbol[0]]
+            Sort_data_note.remove(simbol)
+    s.append(clif)
 
     """Добовляем тактовый размер"""
     Takt_time_in_music21=['2/2','2/4','3/2','3/4','3/8','4/4','6/8','9/8','common']
@@ -36,16 +36,9 @@ def MusicXML_Exporter(Data_note):
 
     """Добавляем ноты, знаки альтерации"""
     for element_type, (x, y, width, height) in Sort_data_note:
-        # Обработка ключей
-        if element_type == 'clef_g':
-            s.append(clef.TrebleClef())
-        elif element_type == 'clef_f':
-            s.append(clef.BassClef())
-        elif element_type == 'clef_c':
-            s.append(clef.AltoClef())
 
         # Обработка нот
-        elif element_type.startswith('note_'):
+        if element_type.startswith('note_'):
             duration_type = element_type.split('_')[1]
             note_name = element_type.split('_')[2] if len(element_type.split('_')) > 2 else 'C'
             accidental = element_type.split('_')[3] if len(element_type.split('_')) > 3 else None
@@ -70,6 +63,8 @@ def MusicXML_Exporter(Data_note):
                 n.pitch.accidental = pitch.Accidental('flat')
             elif accidental == 'natural':
                 n.pitch.accidental = pitch.Accidental('natural')
+            elif accidental == 'double_sharp':
+                n.pitch.accidental = pitch.Accidental('double_sharp')
 
             s.append(n)
 
@@ -101,15 +96,30 @@ def MusicXML_Exporter(Data_note):
 
 
 
+"""ПРИМЕР РАБОТЫ"""
 
 example_notes = [
-        ('time_2_2', (1, 2, 3, 6)),
+        ('time_4_4', (1, 2, 3, 6)),
         ('clef_g', (10, 20, 30, 60)),
-        ('note_quarter_C', (102, 38, 20, 20)),
-        ('note_eighth_D_sharp', (150, 38, 20, 20)),
-        ('note_half_E_flat', (180, 38, 20, 20)),
-        ('rest_quarter', (200, 50, 15, 15)),
-        ('note_quarter_F_natural', (230, 38, 20, 20))
+        ('rest_half', (102, 38, 20, 20)),
+        ('rest_quarter', (103, 38, 20, 20)),
+        ('note_quarter_A', (150, 38, 20, 20)),
+        ('note_quarter_E', (151, 38, 20, 20)),
+        ('note_quarter_A', (152, 38, 20, 20)),
+        ('note_quarter_E', (153, 38, 20, 20)),
+        ('note_quarter_A', (154, 38, 20, 20)),
+        ('note_quarter_G', (155, 38, 20, 20)),
+        ('note_quarter_G', (156, 38, 20, 20)),
+        ('rest_quarter', (157, 38, 20, 20)),
+        ('note_quarter_G', (158, 38, 20, 20)),
+        ('note_quarter_E', (159, 38, 20, 20)),
+        ('note_quarter_G', (160, 38, 20, 20)),
+        ('note_quarter_E', (161, 38, 20, 20)),
+        ('note_quarter_G', (162, 38, 20, 20)),
+        ('note_quarter_A', (163, 38, 20, 20)),
+        ('note_quarter_A', (164, 38, 20, 20)),
+        ('rest_quarter', (165, 38, 20, 20)),
+        ('note_quarter_A', (166, 38, 20, 20)),
     ]
 
 MusicXML_Exporter(example_notes)

@@ -63,9 +63,9 @@ temp/
 # recognize_old/
 
 # Output files
-output/
+
 results/
-*.musicxml
+
 *.midi
 
 # Jupyter Notebooks
@@ -75,7 +75,7 @@ results/
 htmlcov/
 .coverage
 .coverage.*
-coverage.xml
+
 *.cover
 .hypothesis/
 .pytest_cache/
