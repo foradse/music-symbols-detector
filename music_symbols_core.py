@@ -356,3 +356,5 @@ def validate_symbol_class(symbol_class, allowed_classes):
         True если класс валиден
     """
     pass 
+
+
